@@ -198,7 +198,7 @@ export const PersonalTab: React.FC<PersonalTabProps> = ({
             value={newItemTitle}
             onChange={(e) => setNewItemTitle(e.target.value)}
             autoFocus
-            className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 px-3 py-2 text-base sm:text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           <button
             type="submit"

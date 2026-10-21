@@ -555,7 +555,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
             placeholder="Cari barang, PIC, atau catatan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+            className="w-full pl-9 pr-3 py-2 text-base sm:text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
           />
         </div>
         <button
@@ -817,7 +817,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
                   onChange={(e) => setNewTitle(e.target.value)}
                   autoFocus
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-base sm:text-xs"
                 />
               </div>
 
@@ -827,7 +827,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as GroupItem['category'])}
-                    className="w-full px-2.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium text-base sm:text-xs"
                   >
                     <option value="BBQ & Masak">BBQ & Masak</option>
                     <option value="Makanan & Bumbu">Makanan & Bumbu</option>
@@ -843,7 +843,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
                   <select
                     value={newPic}
                     onChange={(e) => setNewPic(e.target.value)}
-                    className="w-full px-2.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
+                    className="w-full px-2.5 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium text-base sm:text-xs"
                   >
                     <option value="">-- Belum Ditentukan --</option>
                     {userName && <option value={userName}>Saya ({userName})</option>}
@@ -863,7 +863,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none text-base sm:text-xs"
                 />
               </div>
 

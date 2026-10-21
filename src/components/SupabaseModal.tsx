@@ -100,7 +100,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 placeholder="https://xyzcompany.supabase.co"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-base sm:text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
               />
             </div>
 
@@ -113,7 +113,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
                 placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 value={anonKey}
                 onChange={(e) => setAnonKey(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-base sm:text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono"
               />
             </div>
           </div>

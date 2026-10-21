@@ -110,7 +110,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
                 autoFocus
-                className="w-full px-3 py-2 rounded-xl border border-emerald-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50/30"
+                className="w-full px-3 py-2 rounded-xl border border-emerald-400 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-emerald-50/30"
               />
             )}
           </div>

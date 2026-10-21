@@ -26,7 +26,14 @@ body {
   background: #94a3b8;
 }
 
-/* Prevent iOS Safari auto-zoom on input focus */
+/* Bulletproof iOS WebKit zoom prevention (Safari, Chrome iOS, Edge iOS) */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+  touch-action: manipulation;
+}
+
 @media screen and (max-width: 768px) {
   input,
   select,
@@ -34,4 +41,5 @@ body {
     font-size: 16px !important;
   }
 }
+
 
