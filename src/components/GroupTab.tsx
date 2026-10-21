@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GroupItem, CategoryType, TRIP_MEMBERS } from '../types';
 import { DEFAULT_GROUP_ITEMS } from '../data/defaultItems';
 import {
@@ -26,7 +26,7 @@ import {
   Music,
   Star,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { triggerCelebration, clearCelebration } from '../lib/confetti';
 
 interface GroupTabProps {
   userName: string;
@@ -134,18 +134,29 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     };
   }, [fetchItems]);
 
+  const isInitialMountGroup = useRef(true);
+  const prevCompletedGroupRef = useRef(items.filter((i) => i.isCompleted).length);
+
   // Update progress
   useEffect(() => {
     const completed = items.filter((i) => i.isCompleted).length;
     onUpdateProgress(completed, items.length);
 
-    if (items.length > 0 && completed === items.length) {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.7 },
-      });
+    if (
+      !isInitialMountGroup.current &&
+      items.length > 0 &&
+      prevCompletedGroupRef.current < items.length &&
+      completed === items.length
+    ) {
+      triggerCelebration();
     }
+
+    prevCompletedGroupRef.current = completed;
+    isInitialMountGroup.current = false;
+
+    return () => {
+      clearCelebration();
+    };
   }, [items, onUpdateProgress]);
 
   // Check / Toggle item completion

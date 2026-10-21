@@ -6,6 +6,7 @@ import { TripInfoTab } from './components/TripInfoTab';
 import { UserModal } from './components/UserModal';
 import { SupabaseModal } from './components/SupabaseModal';
 import { getUserName, saveUserName, getSupabaseCredentials } from './lib/supabase';
+import { clearCelebration } from './lib/confetti';
 
 export function App() {
   const [userName, setUserName] = useState<string>(() => getUserName());
@@ -13,6 +14,11 @@ export function App() {
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<'personal' | 'group' | 'info'>('group');
+
+  const handleTabChange = (tab: 'personal' | 'group' | 'info') => {
+    clearCelebration();
+    setActiveTab(tab);
+  };
 
   const [personalProgress, setPersonalProgress] = useState({ completed: 0, total: 0 });
   const [groupProgress, setGroupProgress] = useState({ completed: 0, total: 0 });
@@ -45,7 +51,7 @@ export function App() {
         onOpenSupabaseModal={() => setIsSupabaseModalOpen(true)}
         isSupabaseConnected={isSupabaseConnected}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         personalProgress={personalProgress}
         groupProgress={groupProgress}
       />

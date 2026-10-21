@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PersonalItem } from '../types';
 import { DEFAULT_PERSONAL_ITEMS } from '../data/defaultItems';
 import { Check, Plus, Trash2, RotateCcw, CheckCircle2, Sparkles, AlertTriangle } from 'lucide-react';
-import confetti from 'canvas-confetti';
+import { triggerCelebration, clearCelebration } from '../lib/confetti';
 
 const STORAGE_KEY = 'trip_personal_checklist';
 
@@ -31,20 +31,32 @@ export const PersonalTab: React.FC<PersonalTabProps> = ({
   const [newItemTitle, setNewItemTitle] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
 
+  const isInitialMount = useRef(true);
+  const prevCompletedRef = useRef(items.filter((i) => i.isCompleted).length);
+
   // Sync with local storage and update progress
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     const completedCount = items.filter((i) => i.isCompleted).length;
     onUpdateProgress(completedCount, items.length);
 
-    // If all completed and > 0, trigger celebration confetti
-    if (items.length > 0 && completedCount === items.length) {
-      confetti({
-        particleCount: 80,
-        spread: 60,
-        origin: { y: 0.8 },
-      });
+    // Only trigger if transitioning to 100% via user click (never on mount or reload!)
+    if (
+      !isInitialMount.current &&
+      items.length > 0 &&
+      prevCompletedRef.current < items.length &&
+      completedCount === items.length
+    ) {
+      triggerCelebration();
     }
+
+    prevCompletedRef.current = completedCount;
+    isInitialMount.current = false;
+
+    // Clean up any active confetti canvas when unmounting or switching tabs
+    return () => {
+      clearCelebration();
+    };
   }, [items, onUpdateProgress]);
 
   const toggleItem = (id: string) => {
