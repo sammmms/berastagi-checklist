@@ -91,7 +91,7 @@ export const TripInfoTab: React.FC = () => {
           <div className="space-y-1 text-slate-600">
             <p>• <strong>06.00 WIB:</strong> Titipapan</p>
             <p>• <strong>07.00 WIB:</strong> Medan</p>
-            <p>• <strong>Rute:</strong> Shanly $\rightarrow$ Pincek $\rightarrow$ Ahong $\rightarrow$ Jessy $\rightarrow$ Citra $\rightarrow$ Raymond</p>
+            <p>• <strong>Rute:</strong> Shanly → Pincek → Ahong → Jessy → Citra → Raymond</p>
           </div>
         </div>
       </div>

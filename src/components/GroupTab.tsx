@@ -24,6 +24,7 @@ import {
   Wine,
   Home,
   Music,
+  Star,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -55,7 +56,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('Semua');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'unassigned' | 'pending' | 'completed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'my_items' | 'unassigned' | 'pending' | 'completed'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -358,12 +359,25 @@ export const GroupTab: React.FC<GroupTabProps> = ({
   const completedCount = items.filter((i) => i.isCompleted).length;
   const progressPercent = items.length === 0 ? 0 : Math.round((completedCount / items.length) * 100);
 
+  // User assigned stats (Barang bawaan "Saya")
+  const myItemsCount = userName
+    ? items.filter((i) => i.picName?.toLowerCase() === userName.toLowerCase()).length
+    : 0;
+  const myCompletedCount = userName
+    ? items.filter(
+        (i) => i.picName?.toLowerCase() === userName.toLowerCase() && i.isCompleted
+      ).length
+    : 0;
+
   const filteredItems = items.filter((item) => {
     // Category match
     if (selectedCategory !== 'Semua' && item.category !== selectedCategory) {
       return false;
     }
     // Status match
+    if (statusFilter === 'my_items') {
+      if (!userName || item.picName?.toLowerCase() !== userName.toLowerCase()) return false;
+    }
     if (statusFilter === 'unassigned' && item.picName) return false;
     if (statusFilter === 'pending' && item.isCompleted) return false;
     if (statusFilter === 'completed' && !item.isCompleted) return false;
@@ -376,6 +390,28 @@ export const GroupTab: React.FC<GroupTabProps> = ({
       if (!matchTitle && !matchPic && !matchNotes) return false;
     }
     return true;
+  });
+
+  // Priority ordering:
+  // 1. Items assigned to "Saya" (picName === userName) ALWAYS come first at the very top!
+  //    - Incomplete assigned items come at the very top.
+  //    - Completed assigned items come next.
+  // 2. Uncompleted items come before completed items.
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    const aIsMine = userName && a.picName?.toLowerCase() === userName.toLowerCase() ? 1 : 0;
+    const bIsMine = userName && b.picName?.toLowerCase() === userName.toLowerCase() ? 1 : 0;
+
+    // "Saya" always prioritized to the top
+    if (aIsMine !== bIsMine) {
+      return bIsMine - aIsMine;
+    }
+
+    // Within same ownership, pending items come before completed
+    if (a.isCompleted !== b.isCompleted) {
+      return a.isCompleted ? 1 : -1;
+    }
+
+    return 0;
   });
 
   const getCategoryIcon = (cat: GroupItem['category']) => {
@@ -467,6 +503,49 @@ export const GroupTab: React.FC<GroupTabProps> = ({
         </div>
       )}
 
+      {/* Personalized Priority Banner */}
+      {userName && (
+        <div className="bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white rounded-2xl p-4 shadow-sm border border-emerald-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0 backdrop-blur-xs border border-white/20">
+              🎒
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-white">
+                  Tugas Bawaan Kamu ({userName})
+                </h3>
+                <span className="px-2 py-0.5 text-[10px] font-extrabold bg-emerald-400 text-emerald-950 rounded-full">
+                  {myItemsCount} Barang
+                </span>
+              </div>
+              <p className="text-xs text-emerald-100/90 mt-0.5">
+                {myItemsCount === 0
+                  ? 'Belum ada barang yang ditugaskan ke kamu. Klik "Saya yang bawa" untuk klaim barang!'
+                  : myItemsCount === myCompletedCount
+                  ? '🎉 Mantap! Semua barang bawaan tugasmu sudah siap!'
+                  : `${myCompletedCount} barang sudah siap, ${myItemsCount - myCompletedCount} barang masih perlu kamu siapkan.`}
+              </p>
+            </div>
+          </div>
+
+          {myItemsCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setStatusFilter(statusFilter === 'my_items' ? 'all' : 'my_items')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                statusFilter === 'my_items'
+                  ? 'bg-white text-emerald-950 shadow-md ring-2 ring-white/50'
+                  : 'bg-emerald-500/30 hover:bg-emerald-500/50 text-white border border-emerald-300/30'
+              }`}
+            >
+              <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+              <span>{statusFilter === 'my_items' ? 'Lihat Semua' : 'Filter Bawaan Saya'}</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Search & Action Bar */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
@@ -505,12 +584,29 @@ export const GroupTab: React.FC<GroupTabProps> = ({
       </div>
 
       {/* Status Filter Pills */}
-      <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-        <Filter className="w-3 h-3 text-slate-400 mr-1" />
-        <span>Status:</span>
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 overflow-x-auto pb-1 no-scrollbar">
+        <Filter className="w-3 h-3 text-slate-400 shrink-0" />
+        <span className="shrink-0">Status:</span>
+
+        {/* Priority "Bawaan Saya" Filter Pill */}
+        {userName && (
+          <button
+            type="button"
+            onClick={() => setStatusFilter(statusFilter === 'my_items' ? 'all' : 'my_items')}
+            className={`px-2.5 py-1 rounded-lg flex items-center gap-1 shrink-0 transition-all ${
+              statusFilter === 'my_items'
+                ? 'bg-emerald-700 text-white font-bold shadow-xs'
+                : 'bg-emerald-100/90 text-emerald-900 hover:bg-emerald-200 font-bold'
+            }`}
+          >
+            <Star className="w-3 h-3 fill-amber-400 text-amber-500" />
+            <span>Bawaan Saya ({myItemsCount})</span>
+          </button>
+        )}
+
         <button
           onClick={() => setStatusFilter('all')}
-          className={`px-2 py-0.5 rounded-lg ${
+          className={`px-2 py-0.5 rounded-lg shrink-0 ${
             statusFilter === 'all' ? 'bg-slate-200 text-slate-800' : 'hover:text-slate-800'
           }`}
         >
@@ -518,7 +614,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
         </button>
         <button
           onClick={() => setStatusFilter('unassigned')}
-          className={`px-2 py-0.5 rounded-lg ${
+          className={`px-2 py-0.5 rounded-lg shrink-0 ${
             statusFilter === 'unassigned' ? 'bg-amber-100 text-amber-800' : 'hover:text-slate-800'
           }`}
         >
@@ -526,7 +622,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
         </button>
         <button
           onClick={() => setStatusFilter('pending')}
-          className={`px-2 py-0.5 rounded-lg ${
+          className={`px-2 py-0.5 rounded-lg shrink-0 ${
             statusFilter === 'pending' ? 'bg-slate-200 text-slate-800' : 'hover:text-slate-800'
           }`}
         >
@@ -534,7 +630,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
         </button>
         <button
           onClick={() => setStatusFilter('completed')}
-          className={`px-2 py-0.5 rounded-lg ${
+          className={`px-2 py-0.5 rounded-lg shrink-0 ${
             statusFilter === 'completed' ? 'bg-emerald-100 text-emerald-800' : 'hover:text-slate-800'
           }`}
         >
@@ -549,117 +645,155 @@ export const GroupTab: React.FC<GroupTabProps> = ({
             <RefreshCw className="w-6 h-6 mx-auto mb-2 text-emerald-500 animate-spin" />
             <span>Memuat daftar barang bersama...</span>
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : sortedItems.length === 0 ? (
           <div className="bg-white rounded-2xl p-8 text-center text-xs text-slate-400 border border-slate-100">
             <p className="font-semibold text-slate-600 text-sm">Tidak ada barang yang cocok</p>
             <p className="mt-1">Coba sesuaikan kata kunci pencarian atau kategori filter.</p>
           </div>
         ) : (
-          filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className={`p-3.5 rounded-2xl border transition-all bg-white ${
-                item.isCompleted
-                  ? 'border-emerald-200 bg-emerald-50/20'
-                  : 'border-slate-200 hover:border-emerald-300 shadow-sm'
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                {/* Checkbox & Details */}
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleComplete(item)}
-                    title={item.isCompleted ? 'Tandai belum siap' : 'Tandai sudah siap'}
-                    className={`mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
-                      item.isCompleted
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                        : 'border-slate-300 bg-white hover:border-emerald-500'
-                    }`}
-                  >
-                    {item.isCompleted && <Check className="w-4 h-4 stroke-[3]" />}
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
-                        {getCategoryIcon(item.category)}
-                        {item.category}
+          sortedItems.map((item) => {
+            const isMine = !!(userName && item.picName?.toLowerCase() === userName.toLowerCase());
+            return (
+              <div
+                key={item.id}
+                className={`p-3.5 rounded-2xl border transition-all ${
+                  isMine
+                    ? item.isCompleted
+                      ? 'border-emerald-400 bg-emerald-50/50 shadow-xs ring-1 ring-emerald-400/40'
+                      : 'border-emerald-500 ring-2 ring-emerald-500/30 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-white shadow-md'
+                    : item.isCompleted
+                    ? 'border-emerald-200 bg-emerald-50/20'
+                    : 'border-slate-200 hover:border-emerald-300 shadow-sm bg-white'
+                }`}
+              >
+                {/* Highlight Banner on Card for "Saya" */}
+                {isMine && (
+                  <div className="flex items-center justify-between text-[11px] font-bold text-emerald-950 bg-emerald-100/90 px-3 py-1.5 rounded-xl mb-2.5 border border-emerald-300/60 shadow-2xs">
+                    <span className="flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                      Tanggung Jawab Kamu (Harap Kamu Bawa)
+                    </span>
+                    {item.isCompleted ? (
+                      <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" /> Sudah Siap
                       </span>
-
-                      {/* PIC Badge */}
-                      {item.picName ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          <UserCheck className="w-3 h-3" />
-                          PIC: {item.picName}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                          <AlertCircle className="w-3 h-3" />
-                          Belum ada PIC
-                        </span>
-                      )}
-
-                      {/* Checked By stamp */}
-                      {item.isCompleted && item.checkedBy && (
-                        <span className="text-[10px] text-emerald-700 font-medium">
-                          ✓ Siap ({item.checkedBy})
-                        </span>
-                      )}
-                    </div>
-
-                    <p
-                      className={`text-xs sm:text-sm font-bold ${
-                        item.isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'
-                      }`}
-                    >
-                      {item.title}
-                    </p>
-
-                    {item.notes && (
-                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-100">
-                        💬 {item.notes}
-                      </p>
+                    ) : (
+                      <span className="text-amber-800 font-extrabold flex items-center gap-1 animate-pulse">
+                        • Perlu Disiapkan
+                      </span>
                     )}
                   </div>
-                </div>
+                )}
 
-                {/* Quick Actions (Claim & Delete) */}
-                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
-                  {/* Claim button */}
-                  {item.picName?.toLowerCase() !== userName.toLowerCase() ? (
+                <div className="flex items-start justify-between gap-3">
+                  {/* Checkbox & Details */}
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
                     <button
                       type="button"
-                      onClick={() => handleClaimPic(item)}
-                      className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1"
+                      onClick={() => handleToggleComplete(item)}
+                      title={item.isCompleted ? 'Tandai belum siap' : 'Tandai sudah siap'}
+                      className={`mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
+                        item.isCompleted
+                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                          : isMine
+                          ? 'border-emerald-400 bg-white hover:border-emerald-600'
+                          : 'border-slate-300 bg-white hover:border-emerald-500'
+                      }`}
                     >
-                      <UserCheck className="w-3 h-3" />
-                      <span className="hidden sm:inline">Saya yang bawa</span>
-                      <span className="sm:hidden">Klaim</span>
+                      {item.isCompleted && <Check className="w-4 h-4 stroke-[3]" />}
                     </button>
-                  ) : (
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+                          {getCategoryIcon(item.category)}
+                          {item.category}
+                        </span>
+
+                        {/* PIC Badge */}
+                        {item.picName ? (
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                              isMine
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}
+                          >
+                            {isMine ? (
+                              <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
+                            ) : (
+                              <UserCheck className="w-3 h-3" />
+                            )}
+                            {isMine ? 'PIC: Kamu' : `PIC: ${item.picName}`}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertCircle className="w-3 h-3" />
+                            Belum ada PIC
+                          </span>
+                        )}
+
+                        {/* Checked By stamp */}
+                        {item.isCompleted && item.checkedBy && (
+                          <span className="text-[10px] text-emerald-700 font-medium">
+                            ✓ Siap ({item.checkedBy})
+                          </span>
+                        )}
+                      </div>
+
+                      <p
+                        className={`text-xs sm:text-sm font-bold ${
+                          item.isCompleted ? 'text-slate-400 line-through' : 'text-slate-800'
+                        }`}
+                      >
+                        {item.title}
+                      </p>
+
+                      {item.notes && (
+                        <p className="text-[11px] text-slate-500 mt-1 leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-100">
+                          💬 {item.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Quick Actions (Claim & Delete) */}
+                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
+                    {/* Claim button */}
+                    {item.picName?.toLowerCase() !== userName.toLowerCase() ? (
+                      <button
+                        type="button"
+                        onClick={() => handleClaimPic(item)}
+                        className="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 rounded-lg border border-slate-200 transition-all flex items-center gap-1"
+                      >
+                        <UserCheck className="w-3 h-3" />
+                        <span className="hidden sm:inline">Saya yang bawa</span>
+                        <span className="sm:hidden">Klaim</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleClaimPic(item, '')}
+                        className="px-2 py-1 text-[10px] font-semibold text-slate-400 hover:text-rose-500 hover:underline"
+                      >
+                        Lepas PIC
+                      </button>
+                    )}
+
+                    {/* Delete button */}
                     <button
                       type="button"
-                      onClick={() => handleClaimPic(item, '')}
-                      className="px-2 py-1 text-[10px] font-semibold text-slate-400 hover:text-rose-500 hover:underline"
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="p-1 text-slate-300 hover:text-rose-500 rounded-lg transition-colors"
+                      title="Hapus barang"
                     >
-                      Lepas PIC
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                  )}
-
-                  {/* Delete button */}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteItem(item.id)}
-                    className="p-1 text-slate-300 hover:text-rose-500 rounded-lg transition-colors"
-                    title="Hapus barang"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
