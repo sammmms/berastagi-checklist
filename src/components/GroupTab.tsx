@@ -5,6 +5,7 @@ import {
   getSupabaseClient,
   getLocalFallbackItems,
   saveLocalFallbackItems,
+  TABLE_NAME,
 } from '../lib/supabase';
 import {
   Check,
@@ -72,7 +73,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     if (supabase) {
       try {
         const { data, error } = await supabase
-          .from('trip_group_items')
+          .from(TABLE_NAME)
           .select('*')
           .order('created_at', { ascending: true });
 
@@ -120,7 +121,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
       .channel('group_items_realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'trip_group_items' },
+        { event: '*', schema: 'public', table: TABLE_NAME },
         () => {
           fetchItems();
         }
@@ -174,7 +175,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     if (supabase) {
       try {
         await supabase
-          .from('trip_group_items')
+          .from(TABLE_NAME)
           .update({
             is_completed: nextState,
             checked_by: nextCheckedBy,
@@ -212,7 +213,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     if (supabase) {
       try {
         await supabase
-          .from('trip_group_items')
+          .from(TABLE_NAME)
           .update({
             pic_name: assignedTo || null,
             updated_at: new Date().toISOString(),
@@ -242,7 +243,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     if (supabase) {
       try {
         const { data, error } = await supabase
-          .from('trip_group_items')
+          .from(TABLE_NAME)
           .insert([newItemData])
           .select()
           .single();
@@ -307,7 +308,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('trip_group_items').delete().eq('id', id);
+        await supabase.from(TABLE_NAME).delete().eq('id', id);
       } catch (err) {
         console.warn('Failed to delete from Supabase:', err);
       }
@@ -324,7 +325,7 @@ export const GroupTab: React.FC<GroupTabProps> = ({
     if (supabase) {
       try {
         // Delete existing and insert fresh
-        await supabase.from('trip_group_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from(TABLE_NAME).delete().neq('id', '00000000-0000-0000-0000-000000000000');
         const rowsToInsert = DEFAULT_GROUP_ITEMS.map((item) => ({
           title: item.title,
           category: item.category,
@@ -333,14 +334,14 @@ export const GroupTab: React.FC<GroupTabProps> = ({
           checked_by: item.checkedBy,
           notes: item.notes,
         }));
-        const { data, error } = await supabase.from('trip_group_items').insert(rowsToInsert).select();
+        const { data, error } = await supabase.from(TABLE_NAME).insert(rowsToInsert).select();
         if (error) throw error;
         if (data) {
           fetchItems();
         }
       } catch (err) {
         console.error('Error seeding Supabase:', err);
-        alert('Gagal memasukkan data ke Supabase. Pastikan tabel trip_group_items sudah dibuat di SQL Editor.');
+        alert(`Gagal memasukkan data ke Supabase. Pastikan tabel ${TABLE_NAME} sudah dibuat di SQL Editor.`);
       }
     } else {
       const initial: GroupItem[] = DEFAULT_GROUP_ITEMS.map((item, idx) => ({

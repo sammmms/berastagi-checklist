@@ -2,6 +2,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { GroupItem } from '../types';
 import { DEFAULT_GROUP_ITEMS } from '../data/defaultItems';
 
+export const TABLE_NAME = 'bts_cl_group_items';
+
+const DEFAULT_CREDENTIALS = {
+  url: 'https://ahxfeflxhpkxyfitarpn.supabase.co',
+  anonKey: 'sb_publishable_4B_NhAHs7HK8MAn9S9K0Vg_cbl0oKX8',
+};
+
 const STORAGE_KEYS = {
   SUPABASE_URL: 'trip_supabase_url',
   SUPABASE_ANON_KEY: 'trip_supabase_anon_key',
@@ -18,9 +25,12 @@ export function getSupabaseCredentials() {
   const localUrl = localStorage.getItem(STORAGE_KEYS.SUPABASE_URL) || '';
   const localKey = localStorage.getItem(STORAGE_KEYS.SUPABASE_ANON_KEY) || '';
 
+  const finalUrl = localUrl || envUrl || DEFAULT_CREDENTIALS.url;
+  const finalKey = localKey || envKey || DEFAULT_CREDENTIALS.anonKey;
+
   return {
-    url: localUrl || envUrl || '',
-    anonKey: localKey || envKey || '',
+    url: finalUrl,
+    anonKey: finalKey,
     isCustom: !!(localUrl && localKey),
   };
 }
@@ -28,7 +38,7 @@ export function getSupabaseCredentials() {
 export function saveSupabaseCredentials(url: string, anonKey: string) {
   localStorage.setItem(STORAGE_KEYS.SUPABASE_URL, url.trim());
   localStorage.setItem(STORAGE_KEYS.SUPABASE_ANON_KEY, anonKey.trim());
-  cachedClient = null; // reset cached instance
+  cachedClient = null;
 }
 
 export function clearSupabaseCredentials() {
@@ -75,7 +85,6 @@ export function getLocalFallbackItems(): GroupItem[] {
     }
   }
 
-  // Generate initial list from defaults
   const initial: GroupItem[] = DEFAULT_GROUP_ITEMS.map((item, idx) => ({
     id: `item-${idx + 1}`,
     ...item,
@@ -90,10 +99,16 @@ export function saveLocalFallbackItems(items: GroupItem[]): void {
   localStorage.setItem(STORAGE_KEYS.LOCAL_GROUP_ITEMS, JSON.stringify(items));
 }
 
-export const SUPABASE_SQL_SCHEMA = `-- Jalankan SQL ini di menu "SQL Editor" pada dashboard Supabase kamu:
+export const SUPABASE_SQL_SCHEMA = `-- ====================================================================
+-- BERASTAGI CHECKLIST (BTS-CL) & TOV'S FLEUR MIGRATION SCRIPT
+-- Jalankan di SQL Editor pada Supabase (https://ahxfeflxhpkxyfitarpn.supabase.co)
+-- ====================================================================
 
--- 1. Buat tabel daftar barang bersama
-create table if not exists trip_group_items (
+-- --------------------------------------------------------------------
+-- BAGIAN 1: BTS CHECKLIST (PREFIX: bts_cl_)
+-- --------------------------------------------------------------------
+
+create table if not exists public.bts_cl_group_items (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   category text not null default 'Lainnya',
@@ -105,15 +120,67 @@ create table if not exists trip_group_items (
   updated_at timestamptz default now()
 );
 
--- 2. Aktifkan Row Level Security (RLS)
-alter table trip_group_items enable row level security;
+alter table public.bts_cl_group_items enable row level security;
 
--- 3. Berikan izin akses penuh ke tabel untuk semua pengguna aplikasi trip
-create policy "Allow public read" on trip_group_items for select using (true);
-create policy "Allow public insert" on trip_group_items for insert with check (true);
-create policy "Allow public update" on trip_group_items for update using (true);
-create policy "Allow public delete" on trip_group_items for delete using (true);
+drop policy if exists "Allow public read" on public.bts_cl_group_items;
+create policy "Allow public read" on public.bts_cl_group_items for select using (true);
 
--- 4. Aktifkan Realtime agar otomatis ter-update di layar HP semua orang
-alter publication supabase_realtime add table trip_group_items;
+drop policy if exists "Allow public insert" on public.bts_cl_group_items;
+create policy "Allow public insert" on public.bts_cl_group_items for insert with check (true);
+
+drop policy if exists "Allow public update" on public.bts_cl_group_items;
+create policy "Allow public update" on public.bts_cl_group_items for update using (true);
+
+drop policy if exists "Allow public delete" on public.bts_cl_group_items;
+create policy "Allow public delete" on public.bts_cl_group_items for delete using (true);
+
+alter publication supabase_realtime add table public.bts_cl_group_items;
+
+-- --------------------------------------------------------------------
+-- BAGIAN 2: TOV'S FLEUR (PREFIX: tovs_fleur_)
+-- --------------------------------------------------------------------
+
+-- Jika tabel invoices lama sudah ada, rename ke tovs_fleur_invoices:
+do $$
+begin
+  if exists (select from pg_tables where schemaname = 'public' and tablename = 'invoices') then
+    alter table public.invoices rename to tovs_fleur_invoices;
+  end if;
+end $$;
+
+-- Jika tabel tovs_fleur_invoices belum ada, buat baru:
+create table if not exists public.tovs_fleur_invoices (
+  id text primary key,
+  invoice_number text not null,
+  order_date text not null,
+  payment_date text,
+  payment_method text not null default 'Transfer Bank (BCA)',
+  payment_status text not null default 'LUNAS',
+  customer_name text not null,
+  customer_gender text not null default 'Laki-Laki',
+  customer_phone text,
+  recipient_name text not null,
+  recipient_gender text not null default 'Perempuan',
+  product_name text not null,
+  flower_type text not null default 'Artificial',
+  size text not null default 'M',
+  color_scheme text,
+  notes text,
+  greeting_card text,
+  items jsonb not null default '[]'::jsonb,
+  total_amount numeric not null default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.tovs_fleur_invoices enable row level security;
+
+drop policy if exists "Enable all access for anon" on public.tovs_fleur_invoices;
+create policy "Enable all access for anon" on public.tovs_fleur_invoices
+  for all using (true) with check (true);
+
+alter publication supabase_realtime add table public.tovs_fleur_invoices;
+
+-- Buat view backwards-compatibility untuk query lama:
+create or replace view public.invoices as
+  select * from public.tovs_fleur_invoices;
 `;

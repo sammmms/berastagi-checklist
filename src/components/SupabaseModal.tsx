@@ -122,7 +122,7 @@ export const SupabaseModal: React.FC<SupabaseModalProps> = ({
           <div className="border border-slate-200 rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-200">
               <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                📜 SQL Schema Tabel (trip_group_items)
+                📜 SQL Schema Tabel (bts_cl_group_items)
               </span>
               <div className="flex items-center gap-1.5">
                 <button
