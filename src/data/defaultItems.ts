@@ -78,7 +78,7 @@ export const DEFAULT_GROUP_ITEMS: Omit<GroupItem, 'id' | 'createdAt' | 'updatedA
     picName: 'Shanly',
     isCompleted: false,
     checkedBy: null,
-    notes: 'Pan anti-lengket terpisah dari bakaran halal'
+    notes: 'Pan anti-lengket khusus babi, terpisah dari bakaran umum'
   },
   {
     title: 'Pisau Tajam, Gunting Daging, & Talenan',
@@ -99,7 +99,7 @@ export const DEFAULT_GROUP_ITEMS: Omit<GroupItem, 'id' | 'createdAt' | 'updatedA
 
   // Makanan & Bumbu
   {
-    title: 'Ayam & Ikan Segar Marinasi (Halal)',
+    title: 'Ayam & Ikan Segar Marinasi (Menu Bersama/Non-Babi)',
     category: 'Makanan & Bumbu',
     picName: 'Shanly',
     isCompleted: false,
@@ -112,7 +112,7 @@ export const DEFAULT_GROUP_ITEMS: Omit<GroupItem, 'id' | 'createdAt' | 'updatedA
     picName: 'Shanly',
     isCompleted: false,
     checkedBy: null,
-    notes: 'Non-halal (Hanya untuk yang makan babi)'
+    notes: 'Khusus untuk yang makan babi'
   },
   {
     title: 'Sosis & Kentang Frozen (DB)',
@@ -163,12 +163,12 @@ export const DEFAULT_GROUP_ITEMS: Omit<GroupItem, 'id' | 'createdAt' | 'updatedA
     notes: 'Penyedap rasa saat grill'
   },
   {
-    title: 'Porsi Makanan Khusus Halal untuk Citra',
+    title: 'Porsi Makanan Khusus Citra (Non-Babi)',
     category: 'Makanan & Bumbu',
     picName: 'Shanly',
     isCompleted: false,
     checkedBy: null,
-    notes: 'PENTING: Jangan tercampur minyak babi'
+    notes: 'PENTING: Jangan tercampur minyak babi (Citra tidak makan babi)'
   },
 
   // Minuman & Snack

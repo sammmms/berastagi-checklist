@@ -20,7 +20,7 @@ Aplikasi checklist sederhana & responsif untuk perjalanan liburan **Berastagi (2
    - **Mode Offline Graceful Fallback**: Jika Supabase belum dikonfigurasi, aplikasi tetap berjalan 100% menggunakan penyimpanan lokal.
 
 3. **ℹ️ Tab Rencana & Info Trip**:
-   - Info lengkap villa, jadwal penjemputan (06.00 Titipapan / 07.00 Medan), pengingat makanan halal Citra, dan timeline kegiatan.
+   - Info lengkap villa, jadwal penjemputan (06.00 Titipapan / 07.00 Medan), pengingat menu non-babi Citra, dan timeline kegiatan.
 
 ---
 

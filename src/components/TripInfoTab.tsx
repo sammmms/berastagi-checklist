@@ -29,14 +29,14 @@ export const TripInfoTab: React.FC = () => {
 
       {/* Critical Alerts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Halal Alert */}
+        {/* Non-Pork Alert */}
         <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl">
           <div className="flex items-center gap-2 text-amber-900 font-bold mb-1">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Catatan Menu Halal (Citra)</span>
+            <span>Catatan Menu Non-Babi (Citra)</span>
           </div>
           <p className="text-amber-800 leading-relaxed">
-            Citra tidak makan babi. Pastikan pan panggangan babi slice dipisah dan ayam/ikan/sosis untuk Citra tidak terkena lemak babi. Saat rombongan makan siang di Bagor Kabanjahe (Day 2), siapkan makanan halal terlebih dahulu untuk Citra.
+            Citra tidak makan babi. Pastikan pan panggangan babi slice dipisah dan ayam/ikan/sosis untuk Citra tidak tercampur lemak babi. Saat rombongan makan siang di Bagor Kabanjahe (Day 2), singgah belikan makanan non-babi terlebih dahulu untuk Citra.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export const TripInfoTab: React.FC = () => {
             <ul className="mt-1 space-y-1 text-slate-600 list-disc list-inside">
               <li>Pagi: Belanja buah segar & sayur di Pasar Tradisional Berastagi.</li>
               <li>11.30 WIB: Beres-beres & Check-out dari villa.</li>
-              <li>Siang: Makan siang Bagor (Babi Goreng) Kabanjahe / menu halal untuk Citra.</li>
+              <li>Siang: Makan siang Bagor (Babi Goreng) Kabanjahe / menu non-babi untuk Citra.</li>
               <li>Sore: Harvest Moon / The Hill / Ingot.</li>
               <li>19.00 WIB: Perjalanan kembali pulang menuju Medan.</li>
             </ul>
